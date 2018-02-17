@@ -1,0 +1,48 @@
+---
+# defaults file for myrole
+#
+- hosts: all
+  vars_files:
+    - ../vars/conf.yml
+  tasks:
+    - name: resolv.conf replace
+      template: src=../templates/resolv.conf.j2 dest=/etc/resolv.conf
+
+    - name: be sure git is installed
+      yum: name=git state=present
+
+    - name: be sure vim is installed
+      yum: name=vim-minimal state=present
+
+    - name: mkdir .ssh
+      file: dest=/root/.ssh/ state=directory owner=root group=root mode=700
+
+    - name: add authorized keys
+      file: dest=/root/.ssh/authorized_keys state=touch owner=root group=root mode=600
+
+    - name: copy publickey
+      copy: src=../../ssh_keys/id_rsa.pub dest=/root/.ssh/authorized_keys
+
+    - name: change SSH PasswordAuthentication
+      replace:
+        dest: /etc/ssh/sshd_config
+        regexp: 'PasswordAuthentication yes'
+        replace: 'PasswordAuthentication no'
+
+    - name: change SSH UseDNS
+      replace:
+        dest: /etc/ssh/sshd_config
+        regexp: '#UseDNS no'
+        replace: 'UseDNS no'
+
+    - name: change SSH PermitRootLogin
+      replace:
+        dest: /etc/ssh/sshd_config
+        regexp: '#PermitRootLogin yes'
+        replace: 'PermitRootLogin yes'
+
+    - name: restart sshd service
+      service: 
+        name: sshd
+        state: restarted
+
