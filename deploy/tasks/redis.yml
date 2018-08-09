@@ -1,0 +1,47 @@
+---
+- hosts: cache
+  vars_files:
+    - ../vars/vars.yml
+  tasks:
+
+  - name: SELinuxのDisable設定
+    selinux: state=disabled
+    tags:
+      - recreate
+
+  - name: enable ntpd
+    systemd: enabled=yes name=ntpd
+  - systemd: state=restarted name=ntpd
+    tags:
+      - recreate
+
+  - name: redis install
+    yum : name=redis state=latest
+    tags:
+      - recreate
+
+  - name: enable redis.service
+    systemd: enabled=yes name=redis
+    tags:
+      - recreate
+
+  - name: daemon reload
+    shell: systemctl daemon-reload
+    tags:
+      - recreate
+
+  - name: add redis.conf
+    template:
+      src=../template/redis/redis.conf
+      dest=/etc/redis.conf
+    tags:
+      - recreate
+
+  - name: restart redis.service
+    systemd: state=restarted name=redis
+    tags:
+      - recreate
+
+  - name: flushdb
+    shell: redis-cli flushdb
+ 

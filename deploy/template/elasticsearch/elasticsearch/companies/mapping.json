@@ -1,0 +1,17 @@
+{
+  "companies":{
+    "properties":{
+      "Id":{
+        "type":"integer"
+      },
+      "Name":{
+        "type":"string",
+        "analyzer":"ja_ngram"
+      },
+      "Description":{
+        "type":"string",
+        "analyzer":"ja_ngram"
+      }
+    }
+  }
+}

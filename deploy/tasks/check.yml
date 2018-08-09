@@ -1,0 +1,15 @@
+---
+- hosts: step
+  connection: local
+  vars_files: 
+    - ../vars/vars.yml
+
+  tasks:
+  - command: {{ tags }}
+    register: result
+    tags: untagged
+
+  - debug: msg="タグが指定されていません"
+    when: result | succeeded
+    tags: untagged
+

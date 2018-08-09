@@ -1,0 +1,40 @@
+{
+  "articles":{
+    "properties":{
+      "Id":{
+        "type":"integer"
+      },
+      "ImageId":{
+        "type":"integer"
+      },
+      "CompanyId":{
+        "type":"integer"
+      },
+      "Title":{
+        "type":"string",
+        "analyzer":"ja_ngram"
+      },
+      "SubTitle":{
+        "type":"string",
+        "analyzer":"ja_ngram"
+      },
+      "TextContent":{
+        "type":"string",
+        "analyzer":"ja_ngram"
+      },
+      "Tags":{
+        "type":"string",
+        "analyzer":"whitespace"
+      },
+      "Status":{
+        "type":"integer"
+      },
+      "PublishedAt":{
+        "type":"date"
+      },
+      "TrashFlg":{
+        "type": "boolean"
+      }
+    }
+  }
+}

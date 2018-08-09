@@ -1,0 +1,124 @@
+---
+- hosts: db-slave
+  vars_files:
+    - ../vars/vars.yml
+  tasks:
+
+  - name: SELinuxのDisable設定
+    selinux: state=disabled
+    tags:
+      - recreate
+
+  - name: install packege
+    yum: state=latest name={{ item }}
+    with_items:
+    - ntp.x86_64
+    - postgresql96.x86_64
+    - python-psycopg2.x86_64
+    - postgresql96-contrib.x86_64
+    tags:
+      - recreate
+
+  - name: start {{ item }}
+    systemd: enabled=yes name={{ item }}
+    with_items:
+    - ntpd
+    tags:
+      - recreate
+
+  - stat:
+      path=/usr/lib/systemd/system/postgresql-9.6.service
+    register: is_systemd
+    tags:
+      - recreate
+
+  - name: add postgresql-9.6.service
+    template:
+      src={{ inventory_dir }}/template/redis/postgresql-9.6.service
+      dest=/usr/lib/systemd/system/postgresql-9.6.service
+    when: is_systemd.stat.exists == false
+    tags:
+      - recreate
+
+  - name: stop postgresql-9.6.service
+    systemd: state=stopped name=postgresql-9.6
+    tags:
+      - recreate
+      - migrate
+
+  - stat:
+      path=/var/lib/pgsql/9.6/data
+    register: is_dir
+    tags:
+      - recreate
+      - migrate
+
+  - name: delete data dir
+    file:
+      path=/var/lib/pgsql/9.6/data
+      state=absent
+    when: is_dir.stat.isdir == true
+    tags:
+      - recreate
+      - migrate
+
+  - name: pg_basebackup
+    shell: pg_basebackup -h {{ groups['db-master'][0] }} -D /var/lib/pgsql/9.6/data -U postgres -R
+    become: yes
+    become_user: postgres
+    tags:
+      - recreate
+      - migrate
+
+  - name: add postgresql.conf
+    template:
+      src={{ inventory_dir }}/template/db-master/postgresql.conf
+      dest=/var/lib/pgsql/9.6/data/
+    tags:
+      - recreate
+      - migrate
+
+  - name: add recovery.conf
+    template:
+      src={{ inventory_dir }}/template/db-slave/recovery.conf
+      dest=/var/lib/pgsql/9.6/data/
+    tags:
+      - recreate
+      - migrate
+
+  - name: check pg_keeper
+    stat:
+      path=/usr/local/src/pg_keeper
+    register: dir
+    changed_when: false
+    tags:
+      - recreate
+
+  - name: delete pg_keeper dir
+    file:
+      path=/usr/local/src/pg_keeper
+      state=absent
+    when: dir.stat.exists
+    tags:
+      - recreate
+
+  - name: git checkout pg_keeper
+    shell: git clone https://github.com/MasahikoSawada/pg_keeper.git
+    args:
+      chdir: /usr/local/src
+    tags:
+      - recreate
+
+  - name: install pg_keeper
+    shell: export PATH=/usr/pgsql-9.6/bin/:$PATH; make USE_PGXS=1; make USE_PGXS=1 install
+    args:
+      chdir: /usr/local/src/pg_keeper
+    tags:
+      - recreate
+
+  - name: restart postgresql-9.6.service
+    systemd: state=started name=postgresql-9.6
+    tags:
+      - recreate
+      - migrate
+

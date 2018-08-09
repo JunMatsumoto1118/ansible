@@ -1,0 +1,84 @@
+---
+- hosts: step
+  connection: local
+  vars_files:
+    - ../vars/vars.yml
+  tasks:
+
+# branchがdevelopの場合、gittagにtag名を入れる
+
+  - name: git status
+    shell: git status | head -1 | awk '{print $2}'
+    args:
+      chdir: "{{ workdir }}/{{ repobase }}/{{ project }}"
+    register: branch_name
+    changed_when: false
+    tags:
+      - recreate
+      - migrate
+      - deploy
+
+  - name: check tag version
+    shell: git status | head -1 | awk '{print $5}'
+    args:
+      chdir: "{{ workdir }}/{{ repobase }}/{{ project }}"
+    register: gittag
+    when: branch_name.stdout == "HEAD"
+    changed_when: false
+    tags:
+      - recreate
+      - migrate
+      - deploy
+
+# branchがdevelopではない場合、gittagにブランチ名を入れる
+  - name: check branch
+    shell: git status --short --branch | awk '{print $2}'
+    args:
+      chdir: "{{ workdir }}/{{ repobase }}/{{ project }}"
+    register: gitbranch
+    when: branch_name.stdout != "HEAD"
+    changed_when: false
+    tags:
+      - recreate
+      - migrate
+      - deploy
+
+# slack送信
+  - name : send tag (finish)
+    slack:
+      token: '{{ slack_token }}'
+      msg: "デプロイを開始します\n
+            ``` 
+            project: {{project}}\n
+            env: {{env}}\n
+            version: {{ gittag.stdout }}\n
+            date: {{ lookup(\"pipe\",\"date +%Y/%m/%d-%H:%M:%S\") }}
+            ```"
+      channel: '{{ post_channel }}'
+      color: good
+    when: branch_name.stdout == "HEAD"
+    run_once: true
+    tags:
+      - recreate
+      - migrate
+      - deploy
+
+  - name : send branch (finish)
+    slack:
+      token: '{{ slack_token }}'
+      msg: "デプロイが開始します\n
+            ``` 
+            project: {{project}}\n
+            env: {{env}}\n
+            version: {{ gitbranch.stdout }}\n
+            date: {{ lookup(\"pipe\",\"date +%Y/%m/%d-%H:%M:%S\") }}
+            ```"
+      channel: '{{ post_channel }}'
+      color: good
+    when: branch_name.stdout != "HEAD"
+    run_once: true
+    tags:
+      - recreate
+      - migrate
+      - deploy
+

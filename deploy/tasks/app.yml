@@ -1,0 +1,99 @@
+---
+- hosts: app
+  vars_files:
+    - ../vars/vars.yml
+  tasks:
+  - name: SELinuxのDisable設定
+    selinux: state=disabled
+    tags:
+      - recreate
+
+  - name: enable ntpd
+    systemd: enabled=yes name=ntpd
+  - systemd: state=restarted name=ntpd
+    tags:
+      - recreate
+
+  - stat:
+      path=/usr/lib/systemd/system/{{ project }}.service
+    register: is_systemd
+    tags:
+      - recreate
+
+  - name: add {{ project }}.service
+    template:
+      src={{ inventory_dir }}/template/app/{{ project }}.service
+      dest=/usr/lib/systemd/system/{{ project }}.service
+    when: is_systemd.stat.exists == false
+    tags:
+      - recreate
+
+  - name: enable {{ project }}.service
+    shell: systemctl enable {{ project }}
+    when: is_systemd.stat.exists == false
+    tags:
+      - recreate
+
+  - name: stop {{ project }}
+    systemd: state=stopped name={{ project }}
+    ignore_errors: True
+    tags:
+      - recreate
+
+# DocumentRootのRsync
+  - name: check application dir
+    stat:
+      path={{ workdir }}/{{ repobase }}/{{ project }}
+    register: is_dir
+    tags:
+      - recreate
+
+  - name: Create application dir
+    file:
+      path={{ workdir }}/{{ repobase }}/{{ project }}
+      state=directory
+      owner=root
+      group=root
+      mode=0755
+    when: is_dir.stat.exists == false
+    tags:
+      - recreate
+
+  - name: Rsync application dir
+    shell : rsync -avz  --exclude='.git' {{ groups['step'][0] }}:{{ workdir }}/{{ repobase }}/{{ project }} .
+    args:
+      chdir: "{{workdir}}/{{repobase}}/"
+    tags:
+      - recreate
+      - migrate
+      - deploy
+
+  - name: Rsync tools
+    shell : rsync -avz --delete {{ groups['step'][0] }}:/opt/infra-code/tools/build-server/bin/monitor_master_db.py .
+    args:
+      chdir: "/usr/local/bin/"
+    tags:
+      - recreate
+      - migrate
+      - deploy
+
+  - name: cron
+    cron:
+      name: "db monitor"
+      job: "for i in `seq 1 12`;do sleep 5; python3 /usr/local/bin/monitor_master_db.py; done"
+    tags:
+      - recreate
+      - migrate
+      - deploy
+
+  - name: just force systemd to reread configs
+    systemd: daemon_reload=yes
+    tags: 
+      - recreate
+
+  - name: start {{ project }}
+    systemd: state=restarted name={{ project }}
+    tags:
+      - recreate
+      - migrate
+      - deploy

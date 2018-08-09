@@ -1,0 +1,16 @@
+- import_playbook: tasks/db-master.yml
+- import_playbook: tasks/db-slave.yml
+- import_playbook: tasks/db-replication.yml
+- import_playbook: tasks/step.yml
+- import_playbook: tasks/start_notification.yml
+- import_playbook: tasks/mainte_in.yml 
+- import_playbook: tasks/front.yml
+- import_playbook: tasks/img.yml
+- import_playbook: tasks/admin.yml
+- import_playbook: tasks/redis.yml
+- import_playbook: tasks/elasticsearch.yml
+- import_playbook: tasks/init-es.yml
+- import_playbook: tasks/goose.yml
+- import_playbook: tasks/app.yml
+- import_playbook: tasks/mainte_out.yml
+- import_playbook: tasks/finish_notification.yml

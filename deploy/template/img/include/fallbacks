@@ -1,0 +1,44 @@
+#
+# Handle error pages
+#
+
+error_page  401          /401.html;
+error_page  403          /403.html;
+error_page  404          /404.html;
+error_page  500 502 504  /50x.html;
+error_page  503          /maint.html;
+
+location = /401.html {
+    root         /usr/share/nginx/html;
+    allow        all;
+    auth_basic   off;
+    expires      -1;
+}
+
+location = /403.html {
+    root         /usr/share/nginx/html;
+    allow        all;
+    auth_basic   off;
+    expires      -1;
+}
+
+location = /404.html {
+    root         /usr/share/nginx/html;
+    allow        all;
+    auth_basic   off;
+    expires      -1;
+}
+
+location = /50x.html {
+    root         /usr/share/nginx/html;
+    allow        all;
+    auth_basic   off;
+    expires      -1;
+}
+
+location = /maint.html {
+    root         /usr/share/nginx/html;
+    allow        all;
+    auth_basic   off;
+    expires      -1;
+}

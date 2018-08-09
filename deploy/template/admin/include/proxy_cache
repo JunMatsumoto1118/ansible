@@ -1,0 +1,16 @@
+proxy_cache               czone;
+proxy_cache_key           "$scheme://$host$request_uri";
+proxy_cache_bypass        $http_cache_control; # Don't pull from cache based on "Cache-Control: no-cache" request header
+
+proxy_cache_valid         200  1h;
+proxy_cache_valid         301  1m;
+proxy_cache_valid         302  1m;
+proxy_cache_valid         401  1s;
+proxy_cache_valid         404  5s;
+proxy_cache_valid         503  1s;
+
+proxy_cache_lock          on;
+proxy_cache_lock_timeout  5s;
+proxy_cache_use_stale     timeout invalid_header http_500 http_502 http_503 http_504;
+
+add_header                X-Proxy-Cache  $upstream_cache_status;

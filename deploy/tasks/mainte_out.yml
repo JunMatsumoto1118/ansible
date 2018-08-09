@@ -1,0 +1,23 @@
+---
+- hosts: front
+  vars_files:
+    - ../vars/vars.yml
+  tasks:
+
+  - name: site.confを読み込み
+    command: mv /etc/nginx/conf.d/site.conf.nouse /etc/nginx/conf.d/site.conf
+    tags:
+      - recreate
+      - migrate
+
+  - name: mainte.confの読み込まない
+    command: mv /etc/nginx/conf.d/maint.conf /etc/nginx/conf.d/maint.conf.nouse
+    tags:
+      - recreate
+      - migrate
+
+  - name: nginx restart
+    systemd: state=restarted name=nginx
+    tags:
+      - recreate
+      - migrate

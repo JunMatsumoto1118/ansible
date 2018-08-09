@@ -1,0 +1,87 @@
+---
+- hosts: admin
+  vars_files:
+    - ../vars/vars.yml
+  tasks:
+  - name: SELinuxのDisable設定
+    selinux: state=disabled
+    tags:
+      - recreate
+
+  - name: enable ntpd
+    systemd: enabled=yes name=ntpd
+  - systemd: state=restarted name=ntpd
+    tags:
+      - recreate
+
+  - name: cp nginx.conf
+    template:
+      src=../template/admin/nginx.conf
+      dest=/etc/nginx/nginx.conf
+    tags:
+      - recreate
+
+  - template:
+      src={{ item }}
+      dest=/etc/nginx/conf.d/
+    with_fileglob:
+      - ../template/admin/conf.d/*
+    tags:
+      - recreate
+
+  - template:
+      src={{ item }}
+      dest=/etc/nginx/include/
+    with_fileglob:
+      - ../template/img/include/*
+    tags:
+      - recreate
+
+  - template:
+      src={{ item }}
+      dest=/etc/nginx/ssl/
+    with_fileglob:
+      - ../template/admin/ssl/*
+    tags:
+      - recreate
+
+  - name: check Nginx Document Dir
+    stat:
+      path="{{workdir}}/{{repobase}}/{{project}}/static"
+    register: is_dir
+    tags:
+      - recreate
+
+  - name: Create Nginx Document Dir
+    file:
+      path="{{workdir}}/{{repobase}}/{{project}}/static"
+      state=directory
+      owner=root
+      group=root
+      mode=0755
+    when: is_dir.stat.exists == false
+    tags:
+      - recreate
+
+  - name: Rsync Nginx Document
+    shell : rsync -avz --delete {{ groups['step'][0] }}:{{workdir}}/{{repobase}}/{{project}}/static .
+    args:
+      chdir: "{{workdir}}/{{repobase}}/{{project}}"
+    tags:
+      - recreate
+      - migrate
+      - deploy
+
+  - name: enable nginx.service
+    systemd: enabled=yes name=nginx
+    tags:
+      - recreate
+      - migrate
+      - deploy
+
+  - name: nginx restart
+    systemd: state=restarted name=nginx
+    tags:
+      - recreate
+      - migrate
+      - deploy

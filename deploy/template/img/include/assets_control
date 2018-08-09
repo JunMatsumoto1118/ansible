@@ -1,0 +1,79 @@
+#
+# Handle asset files
+#
+
+# https://www.bjornjohansen.no/exclude-requests-from-nginx-access-log
+# http://kbeezie.com/nginx-configuration-examples/
+
+# disable caching your document html and data
+#location ~* \.(?:manifest|appcache|html?|xml|json)$ {
+#    # access_log  logs/static.log; # I don't usually include a static log
+#    expires     -1;
+#}
+
+# Contents
+location ~* \.(?:html?|xml|json)(\?[0-9A-Za-z]+)?$ {
+    add_header     Cache-Control  "public";
+    expires        5m;
+}
+
+# Feed
+location ~* \.(?:atom|feed|rss)(\?[0-9A-Za-z]+)?$ {
+    add_header     Cache-Control  "public";
+    expires        5m;
+}
+
+# Media: images, icons, video, audio, HTC, fonts
+location ~* \.(?:jpg|jpeg|gif|png|ico|cur|eot|gz|svg|svgz|mp4|ogg|ogv|webm|htc|woff|woff2|ttf)(\?[0-9A-Za-z]+)?$ {
+    access_log     off;
+    add_header     Cache-Control  "public";
+    expires        1M;
+}
+
+# CSS and Javascript
+location ~* \.(?:css|js)(\?[0-9A-Za-z]+)?$ {
+    access_log     off;
+    add_header     Cache-Control  "public";
+    expires        1M;
+    access_log     off;
+}
+
+location =  /robots.txt {
+    access_log     off;
+    log_not_found  off;
+}
+
+location /favicon {
+    empty_gif;
+    access_log     off;
+    log_not_found  off;
+}
+
+location /apple-touch-icon {
+    access_log     off;
+    log_not_found  off;
+}
+
+location =  /apple-touch-icon-precomposed.png {
+    access_log     off;
+    log_not_found  off;
+}
+
+# prevent access
+location ~ /\. {
+    access_log     off;
+    log_not_found  off;
+    return         404;
+}
+
+location ~* (?:readme|readme-[^\.]+)\.(?:html?|md|txt)$  {
+    access_log     off;
+    log_not_found  off;
+    return         404;
+}
+
+location ~* .*\.(bak|log|sql|tmp|swp|swo)$ {
+    access_log     off;
+    log_not_found  off;
+    return         404;
+}

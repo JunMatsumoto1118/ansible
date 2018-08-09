@@ -1,0 +1,28 @@
+---
+- hosts: step
+  connection: local
+  vars_files: 
+    - ../vars/vars.yml
+  tasks:
+
+  - name: goose install
+    shell: go get bitbucket.org/liamstask/goose/cmd/goose
+    tags:
+      - recreate
+      - migrate
+
+  - name: create goose dbconf.yml
+    template:
+      src: "{{ inventory_dir }}/template/goose_dbconf.j2"
+      dest: "{{ workdir }}/{{ repobase }}/{{ project }}/db/dbconf.yml"
+    tags:
+      - recreate
+      - migrate
+
+  - name: goose up
+    shell: /opt/go/bin/goose up
+    args:
+      chdir: "{{ workdir }}/{{ repobase }}/{{ project }}"
+    tags:
+      - recreate
+      - migrate

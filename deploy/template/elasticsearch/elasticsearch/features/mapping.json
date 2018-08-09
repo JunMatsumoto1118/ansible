@@ -1,0 +1,17 @@
+{
+  "features":{
+    "properties":{
+      "Id":{
+        "type":"integer"
+      },
+      "Title":{
+        "type":"string",
+        "analyzer":"ja_ngram"
+      },
+      "Slug":{
+        "type":"string",
+        "analyzer":"ja_ngram"
+      }
+    }
+  }
+}

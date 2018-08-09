@@ -1,0 +1,113 @@
+---
+- hosts: step
+  connection: local
+  vars_files: 
+    - ../vars/vars.yml
+  tasks:
+  - name: download db dump
+    shell: python3 get_gcs.py {{ gcs_bucket }} {{ gcs_object }} {{gcs_output}}
+    args:
+      chdir: "/opt/infra-code/tools/build-server/bin/"
+    tags:
+      - recreate
+      - migrate
+
+
+- hosts: db-master
+  vars_files:
+    - ../vars/vars.yml
+  tasks:
+
+  - name: Restore Dump Data
+    file:
+      path: "{{ gcs_output }}"
+      state: absent
+    tags:
+      - recreate
+      - migrate
+    ignore_errors: True
+
+  - file:
+      path: "{{ dump_data }}"
+      state: absent
+    tags:
+      - recreate
+      - migrate
+    ignore_errors: True
+
+  - shell : rsync -avz {{ groups['step'][0] }}:{{ gcs_output }} .
+    dest: "{{ gcs_output }}"
+    args:
+      chdir: /tmp
+    tags:
+      - recreate
+      - migrate
+
+  - shell: "gunzip {{ gcs_output }}"
+    args:
+      chdir: /tmp
+    tags:
+      - recreate
+      - migrate
+
+  - name: create database
+    shell: psql -c "create database {{ dbname }};"
+    become: yes
+    become_user: postgres
+    tags:
+      - recreate
+      - migrate
+
+  - name: create user
+    postgresql_user:
+      db: "{{ dbname }}"
+      name: "{{ dbuser }}"
+      password: "{{ dbpass }}"
+      state: present
+      login_user: postgres
+    sudo_user: postgres
+    sudo: yes
+    tags:
+      - recreate
+      - migrate
+
+  - name: database  restore
+    shell: psql {{dbname}} < {{ dump_data }}
+    become: yes
+    become_user: postgres
+    tags:
+      - recreate
+      - migrate
+
+  - name: create database pg_state
+    postgresql_db:
+      name: pg_state
+      state: present
+    tags:
+      - recreate
+      - migrate
+
+  - name: change privs pg_state
+    postgresql_privs:
+      db: pg_state
+      type: database
+      priv: ALL
+      state: absent
+      role: postgres
+    tags:
+      - recreate
+      - migrate
+
+  - shell: psql -d pg_state -c "create table failover_log (unixtime int, host varchar(10));"
+    become: yes
+    become_user: postgres
+    tags:
+      - recreate
+      - migrate
+
+  - shell: psql -d pg_state -c "insert into failover_log values(1528179128, 'stg-db01');"
+    become: yes
+    become_user: postgres
+    tags:
+      - recreate
+      - migrate

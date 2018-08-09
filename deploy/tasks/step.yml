@@ -1,0 +1,178 @@
+---
+- hosts: step
+  connection: local
+  vars_files: 
+    - ../vars/vars.yml
+
+  vars_prompt:
+    - name: "branch_name"
+      prompt: "リリース tag もしくは branch 名を指定してください"
+      default: develop
+      private: no
+
+  tasks:
+
+  - name: check workdir
+    stat:
+      path={{ workdir }}
+    register: dir
+    changed_when: false
+    tags:
+      - recreate
+      - migrate
+      - deploy
+
+  - name: delete git dir
+    file:
+      path={{ workdir }}
+      state=absent
+    when: dir.stat.exists
+    tags:
+      - recreate
+      - migrate
+      - deploy
+
+  - name: create git dir
+    file:
+      path={{ workdir }}
+      state=directory
+      owner=root
+      group=root
+      mode=0755
+      recurse=yes
+    when: dir.stat.exists == false
+    tags:
+      - recreate
+      - migrate
+      - deploy
+
+  - name: git fetch 
+    git: 
+      repo: "{{ repourl }}"
+      dest: "{{ workdir }}/{{ repobase }}/{{ project }}"
+      accept_hostkey: yes    
+    tags:
+      - recreate
+      - migrate
+      - deploy
+
+  - name: check tag version
+    shell: git tag | sed 's/v//g' | sort -t . -n -k 1,1 -k 2,2 -k 3,3 -r | head -1
+    args:
+      chdir: "{{ workdir }}/{{ repobase }}/{{ project }}"
+    register: gittag
+    when: branch_name == "develop"
+    tags:
+      - recreate
+      - migrate
+      - deploy
+
+  - name: git checkout lasted tag
+    shell: git checkout v{{gittag.stdout}}
+    args:
+      chdir: "{{ workdir }}/{{ repobase }}/{{ project }}"
+    when: gittag.changed == true
+    tags:
+      - recreate
+      - migrate
+      - deploy
+
+  - name: git checkout input version
+    shell: git checkout -b {{branch_name}}
+    args:
+      chdir: "{{ workdir }}/{{ repobase }}/{{ project }}"
+    when: branch_name != 'develop'
+    tags:
+      - recreate
+      - migrate
+      - deploy
+
+  - name: git status
+    shell: git status
+    args:
+      chdir: "{{ workdir }}/{{ repobase }}/{{ project }}"
+    register: gitstatus
+    changed_when: false
+    tags:
+      - recreate
+      - migrate
+      - deploy
+
+  - name: confirm
+    pause:
+      prompt: "{{gitstatus.stdout}}\nデプロイを開始します。\n宜しければEnterキーを押してください"
+    tags:
+      - recreate
+      - migrate
+      - deploy
+
+  - name: dep install
+    shell: go get -u github.com/golang/dep/cmd/dep
+    args:
+      chdir: "{{ workdir }}/{{ repobase }}/{{ project }}"
+    tags:
+      - recreate
+      - migrate
+      - deploy
+
+  - name: dep ensure
+    shell: cd {{ workdir }}/{{ repobase }}/{{ project }} && dep ensure -vendor-only
+    args:
+      chdir: "{{ workdir }}/{{ repobase }}/{{ project }}"
+    tags:
+      - recreate
+      - migrate
+      - deploy
+
+  - name: dep status
+    shell: cd {{ workdir }}/{{ repobase }}/{{ project }} && dep status
+    args:
+      chdir: "{{ workdir }}/{{ repobase }}/{{ project }}"
+    register: depstatus
+    changed_when: false
+    tags:
+      - recreate
+      - migrate
+      - deploy
+
+  - debug: var=depstatus.stdout_lines
+    tags:
+      - recreate
+      - migrate
+      - deploy
+
+  - template:
+      src=../env.stg.yaml
+      dest={{ workdir }}/{{ repobase }}/{{ project }}/env.yaml
+    tags:
+      - recreate
+      - migrate
+      - deploy
+
+  - name: modify env.yaml
+    shell: python3 monitor_master_db.py
+    args:
+      chdir: "/opt/infra-code/tools/build-server/bin/"
+    tags:
+      - recreate
+      - migrate
+      - deploy
+
+  - name: set credential.json
+    template:
+      src={{ gcs_credential }}
+      dest={{ workdir }}/{{ repobase }}/{{ project }}/credential.json
+    tags:
+      - recreate
+      - migrate
+      - deploy
+
+  - name: app build
+    shell: make clean; make
+    args:
+      chdir: "{{ workdir }}/{{ repobase }}/{{ project }}"
+    changed_when: false
+    tags:
+      - recreate
+      - migrate
+      - deploy

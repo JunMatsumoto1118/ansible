@@ -1,0 +1,74 @@
+---
+- hosts: app[0]
+  vars_files:
+    - ../vars/vars.yml
+
+  tasks:
+  - name: cp init tools
+    template:
+      src={{ item }}
+      dest=/opt/go/src/github.com/zuu-development/papillon/tools/
+    with_fileglob:
+      - ../template/elasticsearch/tools/*
+    tags:
+      - recreate
+
+  - template:
+      src={{ item }}
+      dest=/opt/go/src/github.com/zuu-development/papillon/elasticsearch/articles/
+      mode=0755
+    with_fileglob:
+      - ../template/elasticsearch/elasticsearch/articles/*
+    tags:
+      - recreate
+
+  - template:
+      src={{ item }}
+      dest=/opt/go/src/github.com/zuu-development/papillon/elasticsearch/series/
+      mode=0755
+    with_fileglob:
+      - ../template/elasticsearch/elasticsearch/series/*
+    tags:
+      - recreate
+
+  - template:
+      src={{ item }}
+      dest=/opt/go/src/github.com/zuu-development/papillon/elasticsearch/features/
+      mode=0755
+    with_fileglob:
+      - ../template/elasticsearch/elasticsearch/features/*
+    tags:
+      - recreate
+
+  - template:
+      src={{ item }}
+      dest=/opt/go/src/github.com/zuu-development/papillon/elasticsearch/companies/
+      mode=0755
+    with_fileglob:
+      - ../template/elasticsearch/elasticsearch/companies/*
+    tags:
+      - recreate
+
+  - template:
+      src={{ item }}
+      dest=/opt/go/src/github.com/zuu-development/papillon/elasticsearch/articles/
+      mode=0755
+    with_fileglob:
+      - ../template/elasticsearch/elasticsearch/articles/*
+    tags:
+      - recreate
+
+  - name: execute esclear.sh
+    shell: /opt/go/src/github.com/zuu-development/papillon/tools/esclear.sh
+    tags:
+      - recreate
+
+  - name: execute esinit.sh
+    shell: /opt/go/src/github.com/zuu-development/papillon/tools/esinit.sh
+    tags:
+      - recreate
+
+  - name: execute esrecreate.sh
+    shell: /opt/go/src/github.com/zuu-development/papillon/tools/esrecreate.sh
+    tags:
+      - recreate

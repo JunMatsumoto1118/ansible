@@ -1,0 +1,90 @@
+---
+- hosts: elasticsearch
+  vars_files:
+    - ../vars/vars.yml
+  tasks:
+
+  - name: SELinuxのDisable設定
+    selinux: state=disabled
+    tags:
+      - recreate
+
+  - name: enable ntpd
+    systemd: enabled=yes name=ntpd
+  - systemd: state=restarted name=ntpd
+    tags:
+      - recreate
+
+  - name: elasticsearch install
+    shell: rpm --import https://artifacts.elastic.co/GPG-KEY-elasticsearch
+    ignore_errors: true
+    tags:
+      - recreate
+
+  - name: create elasticsearch.repos
+    template:
+      src={{ item }}
+      dest=/etc/yum.repos.d/
+    with_fileglob:
+      - ../template/elasticsearch/yum.repo/*
+    tags:
+      - recreate
+
+  - yum: name=elasticsearch-5.6.9-1 state=latest
+    tags:
+      - recreate
+
+  - name: create elasticsearch dir
+    file:
+      path=/opt/es
+      state=directory
+      owner=elasticsearch
+      group=elasticsearch
+      mode=0755
+      recurse=yes
+    tags:
+      - recreate
+
+    file:
+      path=/opt/es/logs
+      state=directory
+      owner=elasticsearch
+      group=elasticsearch
+      mode=0755
+      recurse=yes
+    tags:
+      - recreate
+
+  - file:
+      path=/opt/es/data
+      state=directory
+      owner=elasticsearch
+      group=elasticsearch
+      mode=0755
+      recurse=yes
+    tags:
+      - recreate
+
+  - name: enable elasticsearch.service
+    systemd: enabled=yes name=elasticsearch
+    tags:
+      - recreate
+
+  - name: add elasticsearch.conf
+    template:
+      src={{ item }}
+      dest=/etc/elasticsearch/
+    with_fileglob:
+      - ../template/elasticsearch/conf/*
+    tags:
+      - recreate
+
+  - name: enabled elasticsearch.service
+    systemd: state=restarted name=elasticsearch
+    tags:
+      - recreate
+
+  - name: Wait 10 seconds for port 9200 to become open on the host
+    wait_for: timeout=10
+    tags:
+      - recreate

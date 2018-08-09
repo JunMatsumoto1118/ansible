@@ -1,0 +1,4 @@
+development:
+  driver: postgres
+  open: host={{ groups['db-master'][0] }} user={{dbuser}} password={{dbpass}} dbname={{dbname}} sslmode=disable
+

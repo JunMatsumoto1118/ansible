@@ -1,0 +1,24 @@
+{
+  "index":{
+    "analysis":{
+      "analyzer":{
+        "ja_ngram":{
+          "type":"custom",
+          "tokenizer":"ja_ngram_tokenizer",
+          "char_filter": ["icu_normalizer"]
+        }
+      },
+      "tokenizer":{
+        "ja_ngram_tokenizer":{
+          "type":"nGram",
+          "min_gram":"1",
+          "max_gram":"2",
+          "token_chars":[
+            "letter",
+            "digit"
+          ]
+        }
+      }
+    }
+  }
+}

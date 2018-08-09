@@ -1,0 +1,11 @@
+[Unit]
+Description=papillon
+
+[Service]
+Type=simple
+WorkingDirectory=/opt/go/src/github.com/zuu-development/papillon
+ExecStart=/opt/go/src/github.com/zuu-development/papillon/bin/main
+ExecStop=/bin/kill -SIGTERM $MAINPID
+
+[Install]
+WantedBy = multi-user.target

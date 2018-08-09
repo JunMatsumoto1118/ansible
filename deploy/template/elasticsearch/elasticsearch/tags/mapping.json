@@ -1,0 +1,13 @@
+{
+  "tags":{
+    "properties":{
+      "Id":{
+        "type":"integer"
+      },
+      "Name":{
+        "type":"string",
+        "analyzer":"ja_ngram"
+      }
+    }
+  }
+}

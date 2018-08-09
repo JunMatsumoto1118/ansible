@@ -1,0 +1,14 @@
+# ======================== Elasticsearch Configuration =========================
+cluster.name: my-application
+node.name: {{ inventory_hostname }}
+path.data: /opt/es/data
+path.logs: /opt/es/logs
+
+#bootstrap.memory_lock: true
+network.host: {{ ansible_eth0.ipv4.address }}
+http.port: 9200
+
+#discovery.zen.ping.unicast.hosts: ["host1", "host2"]
+#discovery.zen.minimum_master_nodes: 3
+#gateway.recover_after_nodes: 3
+#action.destructive_requires_name: true
