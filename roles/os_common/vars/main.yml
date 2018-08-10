@@ -1,0 +1,11 @@
+# vars file for myrole
+os_packages:
+  - epel-release.noarch
+  - libselinux-python
+  - iproute
+  - sysstat
+
+
+resolv_nameservers:
+  - 8.8.8.8
+  - 8.8.4.4
