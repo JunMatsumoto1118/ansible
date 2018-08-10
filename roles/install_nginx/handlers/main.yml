@@ -1,2 +1,5 @@
 ---
 # handlers file for myrole
+  - name: change nginx
+    shell: systemctl restart nginx
+    ignore_errors: true

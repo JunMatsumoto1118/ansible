@@ -1,4 +1,4 @@
 # vars file for myrole
 httpd_packages:
   - nginx
-  - nginx-devel
+  - openssl-devel

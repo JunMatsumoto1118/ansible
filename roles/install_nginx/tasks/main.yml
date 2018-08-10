@@ -5,4 +5,8 @@
   yum: name={{ item }} state=latest
   with_items:
   - "{{ httpd_packages }}"
- 
+
+- name: configure nginx.conf
+  template: src=nginx.conf dest=/etc/nginx/nginx.conf
+  notify: change nginx
+

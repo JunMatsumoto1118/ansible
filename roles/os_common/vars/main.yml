@@ -4,6 +4,8 @@ os_packages:
   - libselinux-python
   - iproute
   - sysstat
+  - vim
+  - git
 
 
 resolv_nameservers:

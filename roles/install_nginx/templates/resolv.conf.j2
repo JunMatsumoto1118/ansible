@@ -1,5 +1,0 @@
-# {{ ansible_managed }}
-
-{% for i in resolv_nameservers %}
-nameserver {{ i | default('8.8.8.8') }}
-{% endfor %}
