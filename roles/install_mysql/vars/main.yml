@@ -1,0 +1,10 @@
+# vars file for myrole
+mysqlrepo_url:
+  - http://dev.mysql.com/get/mysql57-community-release-el7-7.noarch.rpm
+
+mysql_packege:
+  - mysql-community-server
+  - mysql-community-libs
+  - mysql-community-devel
+  - mysql-community-common
+  - mysql-community-client

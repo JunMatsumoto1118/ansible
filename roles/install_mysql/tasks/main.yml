@@ -1,0 +1,15 @@
+---
+# install mysql
+
+- name: install yum mysql repo
+  yum: name={{ item }} state=present
+  with_items:
+  - "{{ mysqlrepo_url }}"
+
+- name: install yum mysql server
+  yum: name={{ item }} state=latest enablerepo=mysql57-community
+  with_items:
+  - "{{ mysql_packege }}"
+
+
+

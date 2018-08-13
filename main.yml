@@ -3,3 +3,5 @@
   roles:
     - os_common
     - install_nginx
+    - install_mysql
+   
