@@ -2,3 +2,13 @@
 httpd_packages:
   - nginx
   - openssl-devel
+  - php
+  - php-devel
+  - php-mbstring
+  - php-mysql
+  - php-gd
+  - php-xml
+  - php-mcrypt
+
+remirepo_url:
+  - http://rpms.famillecollet.com/enterprise/remi-release-7.rpm
