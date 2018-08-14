@@ -1,0 +1,27 @@
+---
+# install wordpress
+
+- stat: 
+    path: /usr/local/src/wordpress-lasted.tar.gz
+    get_checksum: true
+    checksum_algorithm: md5
+  register: is_wordpress_source_file
+
+- debug: var=is_wordpress_source_file
+- name: get wordpress
+  get_url: 
+    url: "{{ wordpress_url }}" 
+    dest: /usr/local/src/wordpress-lasted.tar.gz
+  register: downloaded_wordpress
+  when: is_wordpress_source_file.stat.exists == false
+
+- name: get wordpress
+  get_url: 
+    url: "{{ wordpress_url }}" 
+    checksum: md5:"{{is_wordpress_source_file.stat.checksum}}"
+    dest: /usr/local/src/wordpress-lasted.tar.gz
+    force: true
+  register: downloaded_wordpress
+  when: is_wordpress_source_file.stat.exists == true
+
+
